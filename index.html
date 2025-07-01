@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shia Community Chatbot</title>
+  <style>
+    body { font-family: Arial; margin: 2rem; background: #f5f5f5; }
+    h2 { color: #333; }
+    .chatbox { background: #fff; padding: 1rem; border-radius: 10px; max-width: 600px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    #messages { margin-top: 1rem; white-space: pre-line; }
+    .user, .bot { margin-bottom: 1rem; }
+    .user { color: #005580; }
+    .bot { color: #008000; }
+  </style>
+</head>
+<body>
+  <div class="chatbox">
+    <h2>Ask the Shia Community AI</h2>
+    <input type="text" id="question" placeholder="Ask a question..." style="width: 80%;" />
+    <button onclick="askQuestion()">Ask</button>
+    <div id="messages"></div>
+  </div>
+
+  <script>
+    async function askQuestion() {
+      const question = document.getElementById("question").value;
+      if (!question.trim()) return;
+
+      const userMsg = `<div class='user'><strong>You:</strong> ${question}</div>`;
+      document.getElementById("messages").innerHTML += userMsg;
+
+      const res = await fetch("/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question })
+      });
+
+      const data = await res.json();
+      const botMsg = `<div class='bot'><strong>Bot:</strong> ${data.answer}</div>`;
+      document.getElementById("messages").innerHTML += botMsg;
+
+      document.getElementById("question").value = "";
+    }
+  </script>
+</body>
+</html>
