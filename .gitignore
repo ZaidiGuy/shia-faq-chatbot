@@ -1,6 +1,23 @@
-.env
-venv/
+# Python
 __pycache__/
-*.pyc
-*.log
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.py
+venv.py
+ENV.py
+
+# Environment variables
+.env
+.env/
+
+# IDE
+.vscode/
+.idea/
+
+# System
 .DS_Store

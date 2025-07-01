@@ -2,45 +2,193 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Shia Community Chatbot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shia Islamic FAQ Assistant</title>
   <style>
-    body { font-family: Arial; margin: 2rem; background: #f5f5f5; }
-    h2 { color: #333; }
-    .chatbox { background: #fff; padding: 1rem; border-radius: 10px; max-width: 600px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    #messages { margin-top: 1rem; white-space: pre-line; }
-    .user, .bot { margin-bottom: 1rem; }
-    .user { color: #005580; }
-    .bot { color: #008000; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background: #f8f4e8;
+      color: #333;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+    header {
+      background: #005f73;
+      color: white;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+    .subtitle {
+      font-size: 0.9rem;
+      opacity: 0.8;
+      margin-top: 0.5rem;
+    }
+    .chat-area {
+      padding: 1.5rem;
+      height: 60vh;
+      overflow-y: auto;
+    }
+    .input-area {
+      display: flex;
+      padding: 1rem;
+      border-top: 1px solid #eee;
+      background: #f9f9f9;
+    }
+    #question {
+      flex: 1;
+      padding: 0.8rem;
+      border: 1px solid #ddd;
+      border-radius: 25px;
+      font-size: 1rem;
+      outline: none;
+    }
+    #question:focus {
+      border-color: #005f73;
+    }
+    button {
+      background: #005f73;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      padding: 0 1.5rem;
+      margin-left: 0.5rem;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #0a9396;
+    }
+    .message {
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .user-message {
+      text-align: right;
+      color: #005f73;
+    }
+    .bot-message {
+      text-align: left;
+      color: #0a9396;
+    }
+    .typing-indicator {
+      color: #666;
+      font-style: italic;
+      margin: 0.5rem 0;
+      display: none;
+    }
+    .error {
+      color: #d00000;
+      background: #ffebee;
+      padding: 0.5rem;
+      border-radius: 5px;
+      margin: 0.5rem 0;
+    }
   </style>
 </head>
 <body>
-  <div class="chatbox">
-    <h2>Ask the Shia Community AI</h2>
-    <input type="text" id="question" placeholder="Ask a question..." style="width: 80%;" />
-    <button onclick="askQuestion()">Ask</button>
-    <div id="messages"></div>
+  <div class="container">
+    <header>
+      <h1>Shia Islamic FAQ Assistant</h1>
+      <div class="subtitle">Answers according to Ja'fari Fiqh</div>
+    </header>
+    
+    <div class="chat-area" id="chatArea">
+      <div class="bot-message message">
+        <strong>Assistant:</strong> السلام عليكم<br>
+        I am here to help with questions about Shia Islam according to Ja'fari jurisprudence. How may I assist you today?
+      </div>
+      <div class="typing-indicator" id="typingIndicator">Assistant is typing...</div>
+    </div>
+    
+    <div class="input-area">
+      <input type="text" id="question" placeholder="Ask your question about Shia Islam..." autocomplete="off">
+      <button onclick="askQuestion()">Send</button>
+    </div>
   </div>
 
   <script>
     async function askQuestion() {
-      const question = document.getElementById("question").value;
-      if (!question.trim()) return;
-
-      const userMsg = `<div class='user'><strong>You:</strong> ${question}</div>`;
-      document.getElementById("messages").innerHTML += userMsg;
-
-      const res = await fetch("/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question })
-      });
-
-      const data = await res.json();
-      const botMsg = `<div class='bot'><strong>Bot:</strong> ${data.answer}</div>`;
-      document.getElementById("messages").innerHTML += botMsg;
-
-      document.getElementById("question").value = "";
+      const questionInput = document.getElementById('question');
+      const question = questionInput.value.trim();
+      if (!question) return;
+      
+      const chatArea = document.getElementById('chatArea');
+      const typingIndicator = document.getElementById('typingIndicator');
+      
+      // Add user message
+      chatArea.innerHTML += `
+        <div class="user-message message">
+          <strong>You:</strong> ${question}
+        </div>
+      `;
+      
+      // Show typing indicator
+      typingIndicator.style.display = 'block';
+      
+      // Clear input
+      questionInput.value = '';
+      
+      // Scroll to bottom
+      chatArea.scrollTop = chatArea.scrollHeight;
+      
+      try {
+        const response = await fetch('/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        
+        const data = await response.json();
+        
+        // Hide typing indicator
+        typingIndicator.style.display = 'none';
+        
+        // Add bot response
+        chatArea.innerHTML += `
+          <div class="bot-message message">
+            <strong>Assistant:</strong> ${data.answer}
+          </div>
+        `;
+      } catch (error) {
+        // Hide typing indicator
+        typingIndicator.style.display = 'none';
+        
+        // Show error
+        chatArea.innerHTML += `
+          <div class="error">
+            Error: Could not get a response. Please try again later.
+          </div>
+        `;
+        console.error('Error:', error);
+      }
+      
+      // Scroll to bottom
+      chatArea.scrollTop = chatArea.scrollHeight;
     }
+    
+    // Allow pressing Enter to send message
+    document.getElementById('question').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        askQuestion();
+      }
+    });
   </script>
 </body>
 </html>
