@@ -19,7 +19,7 @@ def ask():
 
     # Call GPT-4 with user question
     response = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are an Islamic FAQ assistant for a Shia Muslim community. Always answer according to Ja'fari Fiqh. If you're unsure, advise the user to consult a qualified scholar."},
             {"role": "user", "content": user_question}
