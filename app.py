@@ -1,13 +1,14 @@
 from flask import Flask, request, jsonify, send_file
-import requests
+import openai
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv()  # Load environment variables from .env file
+
+# Set OpenAI API key from environment variable
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = Flask(__name__)
-
-DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 
 @app.route("/ask", methods=["POST"])
 def ask():
@@ -18,23 +19,19 @@ def ask():
         return jsonify({"error": "No question provided."}), 400
 
     try:
-        response = requests.post(
-            "https://api.deepseek.com/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": "deepseek-chat",
-                "messages": [
-                    {"role": "system", "content": "You are an Islamic FAQ assistant for a Shia Muslim community. Always answer according to Ja'fari Fiqh. If unsure, advise the user to consult a qualified scholar."},
-                    {"role": "user", "content": user_question}
-                ]
-            }
+        # Use GPT-4 or GPT-3.5-turbo depending on your access
+        response = openai.ChatCompletion.create(
+            model="gpt-4",  # You can change to "gpt-3.5-turbo" if needed
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are an Islamic FAQ assistant for a Shia Muslim community. Always answer according to Ja'fari Fiqh. If unsure, advise the user to consult a qualified scholar."
+                },
+                {"role": "user", "content": user_question}
+            ]
         )
 
-        result = response.json()
-        answer = result['choices'][0]['message']['content'].strip()
+        answer = response['choices'][0]['message']['content'].strip()
         return jsonify({"answer": answer})
 
     except Exception as e:
