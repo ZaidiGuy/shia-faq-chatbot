@@ -2,11 +2,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from flask import Flask, request, jsonify, send_file
-import openai
 import os
+from openai import OpenAI
 
-# Securely get the API key from environment variable
-openai.api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 app = Flask(__name__)
 
@@ -18,8 +17,8 @@ def ask():
     if not user_question:
         return jsonify({"error": "No question provided."}), 400
 
-    # AI-powered response using GPT-4 with Islamic context
-    response = openai.ChatCompletion.create(
+    # Call GPT-4 with user question
+    response = client.chat.completions.create(
         model="gpt-4",
         messages=[
             {"role": "system", "content": "You are an Islamic FAQ assistant for a Shia Muslim community. Always answer according to Ja'fari Fiqh. If you're unsure, advise the user to consult a qualified scholar."},
@@ -27,8 +26,9 @@ def ask():
         ]
     )
 
-    answer = response['choices'][0]['message']['content'].strip()
+    answer = response.choices[0].message.content.strip()
     return jsonify({"answer": answer})
+
 
 @app.route("/faq-sample", methods=["GET"])
 def sample_faq():
@@ -64,4 +64,3 @@ def home():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
