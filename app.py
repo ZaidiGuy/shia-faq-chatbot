@@ -1,12 +1,20 @@
 from flask import Flask, request, jsonify, send_file
-import openai
+from openai import OpenAI
 import os
 from dotenv import load_dotenv
+import sys
 
 load_dotenv()  # Load environment variables from .env file
 
-# Set OpenAI API key from environment variable
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# Validate required environment variables
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    print("ERROR: OPENAI_API_KEY environment variable is not set!")
+    print("Please set your OpenAI API key in a .env file or environment variable.")
+    sys.exit(1)
+
+# Initialize OpenAI client with the new API format
+client = OpenAI(api_key=api_key)
 
 app = Flask(__name__)
 
@@ -19,8 +27,8 @@ def ask():
         return jsonify({"error": "No question provided."}), 400
 
     try:
-        # Use GPT-4 or GPT-3.5-turbo depending on your access
-        response = openai.ChatCompletion.create(
+        # Use the new OpenAI client format
+        response = client.chat.completions.create(
             model="gpt-4",  # You can change to "gpt-3.5-turbo" if needed
             messages=[
                 {
@@ -31,7 +39,7 @@ def ask():
             ]
         )
 
-        answer = response['choices'][0]['message']['content'].strip()
+        answer = response.choices[0].message.content.strip()
         return jsonify({"answer": answer})
 
     except Exception as e:
@@ -70,4 +78,4 @@ def home():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug=False)

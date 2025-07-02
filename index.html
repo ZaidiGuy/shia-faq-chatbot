@@ -120,6 +120,36 @@
   </div>
 
   <script>
+    // Get API base URL from current location or fallback to production
+    const API_BASE_URL = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') 
+      ? window.location.origin 
+      : 'https://shia-faq-chatbot-production.up.railway.app';
+
+    // Helper function to safely create HTML elements and avoid XSS
+    function createMessageElement(className, label, content) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `${className} message`;
+      
+      const labelStrong = document.createElement('strong');
+      labelStrong.textContent = label;
+      
+      const contentSpan = document.createElement('span');
+      contentSpan.textContent = content;
+      
+      messageDiv.appendChild(labelStrong);
+      messageDiv.appendChild(contentSpan);
+      
+      return messageDiv;
+    }
+
+    // Helper function to create error element
+    function createErrorElement(message) {
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error';
+      errorDiv.textContent = message;
+      return errorDiv;
+    }
+
     async function askQuestion() {
       const questionInput = document.getElementById('question');
       const question = questionInput.value.trim();
@@ -128,12 +158,9 @@
       const chatArea = document.getElementById('chatArea');
       const typingIndicator = document.getElementById('typingIndicator');
       
-      // Add user message
-      chatArea.innerHTML += `
-        <div class="user-message message">
-          <strong>You:</strong> ${question}
-        </div>
-      `;
+      // Add user message safely
+      const userMessage = createMessageElement('user-message', 'You: ', question);
+      chatArea.appendChild(userMessage);
       
       // Show typing indicator
       typingIndicator.style.display = 'block';
@@ -145,14 +172,14 @@
       chatArea.scrollTop = chatArea.scrollHeight;
       
       try {
-        const response = await fetch('https://shia-faq-chatbot-production.up.railway.app/ask', {
+        const response = await fetch(`${API_BASE_URL}/ask`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ question })
         });
         
         if (!response.ok) {
-          throw new Error('Network response was not ok');
+          throw new Error(`Network response was not ok: ${response.status}`);
         }
         
         const data = await response.json();
@@ -160,22 +187,17 @@
         // Hide typing indicator
         typingIndicator.style.display = 'none';
         
-        // Add bot response
-        chatArea.innerHTML += `
-          <div class="bot-message message">
-            <strong>Assistant:</strong> ${data.answer}
-          </div>
-        `;
+        // Add bot response safely
+        const botMessage = createMessageElement('bot-message', 'Assistant: ', data.answer);
+        chatArea.appendChild(botMessage);
+        
       } catch (error) {
         // Hide typing indicator
         typingIndicator.style.display = 'none';
         
-        // Show error
-        chatArea.innerHTML += `
-          <div class="error">
-            Error: Could not get a response. Please try again later.
-          </div>
-        `;
+        // Show error safely
+        const errorMessage = createErrorElement('Error: Could not get a response. Please try again later.');
+        chatArea.appendChild(errorMessage);
         console.error('Error:', error);
       }
       
